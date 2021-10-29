@@ -28,7 +28,7 @@ nightly = []
 [dependencies]
 bevy = { git = "https://github.com/bevyengine/bevy", branch = "pipelined-rendering", default-features = false, features = ["render", "bevy_render2", "bevy_pbr2"] }
 bevy_egui = { git = "https://github.com/jakobhellermann/bevy_egui", branch = "bevy-pipelined", default-features = false, features = ["open_url"] }
-emath = "0.14"
+emath = "0.15"
 pretty-type-name = "1.0"
 image = { version = "0.23", default-features = false }
 # bevy_rapier3d = { version = "0.10", optional = true }
