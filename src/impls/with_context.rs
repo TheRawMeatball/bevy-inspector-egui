@@ -8,7 +8,7 @@ use bevy::{
     app::Events,
     asset::{Asset, HandleId},
     prelude::*,
-    render::texture::Texture,
+    // render::texture::Texture,
     render2::texture::Image,
     utils::HashMap,
 };
@@ -78,14 +78,14 @@ impl Default for TextureAttributes {
     }
 }
 
-impl Inspectable for Handle<Texture> {
-    type Attributes = TextureAttributes;
+// impl Inspectable for Handle<Texture> {
+//     type Attributes = TextureAttributes;
 
-    fn ui(&mut self, ui: &mut egui::Ui, _: Self::Attributes, _: &Context) -> bool {
-        ui.label("Todo: Texture");
-        false
-    }
-}
+//     fn ui(&mut self, ui: &mut egui::Ui, _: Self::Attributes, _: &Context) -> bool {
+//         ui.label("Todo: Texture");
+//         false
+//     }
+// }
 
 impl Inspectable for Handle<bevy::render2::texture::Image> {
     type Attributes = TextureAttributes;
@@ -160,29 +160,29 @@ fn rescaled_image<'a>(
     (texture, id)
 }
 
-impl Inspectable for Handle<Font> {
-    type Attributes = ();
+// impl Inspectable for Handle<Font> {
+//     type Attributes = ();
 
-    fn ui(&mut self, ui: &mut egui::Ui, _: Self::Attributes, context: &Context) -> bool {
-        let world = expect_world!(ui, context, "Handle<Texture>");
-        let asset_server = world.get_resource::<AssetServer>().unwrap();
-        let file_events = world.get_resource::<Events<FileDragAndDrop>>().unwrap();
+//     fn ui(&mut self, ui: &mut egui::Ui, _: Self::Attributes, context: &Context) -> bool {
+//         let world = expect_world!(ui, context, "Handle<Texture>");
+//         let asset_server = world.get_resource::<AssetServer>().unwrap();
+//         let file_events = world.get_resource::<Events<FileDragAndDrop>>().unwrap();
 
-        let fonts = world.get_resource::<Assets<Font>>().unwrap();
+//         let fonts = world.get_resource::<Assets<Font>>().unwrap();
 
-        let label = if fonts.contains(self.id) {
-            egui::Label::new("<font>")
-        } else {
-            egui::Label::new("No font").text_color(Color32::RED)
-        };
+//         let label = if fonts.contains(self.id) {
+//             egui::Label::new("<font>")
+//         } else {
+//             egui::Label::new("No font").text_color(Color32::RED)
+//         };
 
-        if utils::ui::drag_and_drop_target_label(ui, label).hovered() {
-            utils::ui::replace_handle_if_dropped(self, file_events, asset_server)
-        } else {
-            false
-        }
-    }
-}
+//         if utils::ui::drag_and_drop_target_label(ui, label).hovered() {
+//             utils::ui::replace_handle_if_dropped(self, file_events, asset_server)
+//         } else {
+//             false
+//         }
+//     }
+// }
 
 fn show_texture(
     texture: &Image,

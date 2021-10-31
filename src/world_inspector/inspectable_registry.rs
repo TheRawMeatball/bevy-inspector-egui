@@ -1,7 +1,8 @@
 use crate::{Context, Inspectable};
-use bevy::render::camera::{DepthCalculation, ScalingMode, VisibleEntities, WindowOrigin};
-use bevy::{pbr::AmbientLight, prelude::*};
-use bevy::{render::pipeline::PrimitiveTopology, utils::HashMap};
+use bevy::render2::camera::{DepthCalculation, ScalingMode, WindowOrigin};
+use bevy::render2::color::Color;
+use bevy::utils::HashMap;
+use bevy::{pbr2::*, prelude::*};
 use bevy_egui::egui;
 use std::any::TypeId;
 
@@ -104,33 +105,33 @@ impl Default for InspectableRegistry {
 
         this.register::<Color>();
         this.register::<bevy::asset::HandleId>();
-        this.register::<TextureAtlasSprite>();
-        this.register::<TextureAtlas>();
+        // this.register::<TextureAtlasSprite>();
+        // this.register::<TextureAtlas>();
         this.register::<PointLight>();
-        this.register::<DirectionalLight>();
-        this.register::<StandardMaterial>();
-        this.register::<ColorMaterial>();
-        this.register::<PrimitiveTopology>();
-        this.register::<Mesh>();
-        this.register::<bevy::sprite::Rect>();
+        // this.register::<DirectionalLight>();
+        // this.register::<StandardMaterial>();
+        // this.register::<ColorMaterial>();
+        // this.register::<PrimitiveTopology>();
+        // this.register::<Mesh>();
+        // this.register::<bevy::sprite::Rect>();
 
         this.register::<WindowOrigin>();
         this.register::<ScalingMode>();
         this.register::<DepthCalculation>();
-        this.register::<VisibleEntities>();
+        // this.register::<VisibleEntities>();
 
-        this.register::<Handle<Texture>>();
-        this.register::<Handle<StandardMaterial>>();
-        this.register::<Handle<ColorMaterial>>();
-        this.register::<Handle<TextureAtlas>>();
-        this.register::<Handle<Mesh>>();
+        // this.register::<Handle<Texture>>();
+        // this.register::<Handle<StandardMaterial>>();
+        // this.register::<Handle<ColorMaterial>>();
+        // this.register::<Handle<TextureAtlas>>();
+        // this.register::<Handle<Mesh>>();
 
-        this.register::<ClearColor>();
-        this.register::<AmbientLight>();
+        // this.register::<ClearColor>();
+        // this.register::<AmbientLight>();
 
-        register!(this Display, Style, Size<f32>, Size<Val>, Val, bevy::ui::FocusPolicy);
-        register!(this VerticalAlign, HorizontalAlign, TextAlignment, TextStyle, TextSection, Text);
-        register!(this PositionType, Direction, FlexDirection, FlexWrap, AlignItems, AlignSelf, JustifyContent);
+        // register!(this Display, Style, Size<f32>, Size<Val>, Val, bevy::ui::FocusPolicy);
+        // register!(this VerticalAlign, HorizontalAlign, TextAlignment, TextStyle, TextSection, Text);
+        // register!(this PositionType, Direction, FlexDirection, FlexWrap, AlignItems, AlignSelf, JustifyContent);
 
         #[cfg(feature = "rapier")]
         {
@@ -157,9 +158,7 @@ impl Default for InspectableRegistry {
 
         // render2
         {
-            use bevy::pbr2::*;
-            use bevy::render2::*;
-            register!(this color::Color, StandardMaterial, Handle<texture::Image>, Handle<StandardMaterial>, PointLight);
+            // register!(this color::Color, StandardMaterial, Handle<texture::Image>, Handle<StandardMaterial>, PointLight);
         }
 
         this
