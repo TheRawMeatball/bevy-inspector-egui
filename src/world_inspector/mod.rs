@@ -2,7 +2,7 @@ pub(crate) mod impls;
 mod inspectable_registry;
 mod plugin;
 
-use bevy::{render::camera::Camera, window::WindowId};
+use bevy::window::WindowId;
 pub use inspectable_registry::InspectableRegistry;
 pub use plugin::WorldInspectorPlugin;
 
@@ -15,7 +15,6 @@ use bevy::{
     },
     prelude::*,
     reflect::{TypeRegistryArc, TypeRegistryInternal},
-    render::render_graph::base::MainPass,
     utils::HashSet,
 };
 use bevy_egui::egui::{self, Color32};
@@ -96,9 +95,6 @@ impl Default for WorldInspectorParams {
             TypeId::of::<Children>(),
             TypeId::of::<Parent>(),
             TypeId::of::<PreviousParent>(),
-            TypeId::of::<MainPass>(),
-            TypeId::of::<Draw>(),
-            TypeId::of::<RenderPipelines>(),
         ]
         .iter()
         .copied()
@@ -475,11 +471,7 @@ fn display_by_reflection(
             .reflect_component_unchecked_mut(world, entity)
             .ok_or(())?
     };
-    Ok(crate::reflect::ui_for_reflect(
-        &mut *reflected,
-        ui,
-        context,
-    ))
+    Ok(crate::reflect::ui_for_reflect(&mut *reflected, ui, context))
 }
 
 // copied from bevy
@@ -520,54 +512,6 @@ macro_rules! is_bundle {
 fn guess_entity_name(entity: EntityRef) -> Cow<'_, str> {
     if let Some(name) = entity.get::<Name>() {
         return name.as_str().into();
-    }
-
-    if let Some(camera) = entity.get::<Camera>() {
-        match &camera.name {
-            Some(name) => return name.as_str().into(),
-            None => return "Camera".into(),
-        }
-    }
-
-    if is_bundle!(entity: PointLight, Transform, GlobalTransform) {
-        return format!("Light ({:?})", entity.id().id()).into();
-    }
-
-    if is_bundle!(
-        entity: Node,
-        Style,
-        Draw,
-        Visible,
-        Text,
-        CalculatedSize,
-        bevy::ui::FocusPolicy,
-        Transform,
-        GlobalTransform
-    ) {
-        return format!("Entity {:?} (Text)", entity.id().id()).into();
-    }
-    if is_bundle!(
-        entity: Draw,
-        Visible,
-        Text,
-        Transform,
-        GlobalTransform,
-        MainPass,
-        bevy::text::Text2dSize
-    ) {
-        return format!("Entity {:?} (Text2d)", entity.id().id()).into();
-    }
-    if is_bundle!(
-        entity: Node,
-        Style,
-        Handle<Mesh>,
-        Draw,
-        Visible,
-        RenderPipelines,
-        Transform,
-        GlobalTransform
-    ) {
-        return format!("Entity {:?} (Node)", entity.id().id()).into();
     }
 
     format!("Entity {:?}", entity.id()).into()

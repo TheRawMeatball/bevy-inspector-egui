@@ -1,25 +1,12 @@
 use crate::options::{NumberAttributes, OptionAttributes, Vec2dAttributes};
 use crate::{Context, Inspectable};
-use bevy::{
-    asset::HandleId,
-    pbr::DirectionalLight,
-    render::{
-        camera::{DepthCalculation, ScalingMode, VisibleEntities, WindowOrigin},
-        mesh::Indices,
-        pipeline::PrimitiveTopology,
-    },
-};
-use bevy::{pbr::AmbientLight, prelude::*};
+use bevy::asset::HandleId;
+use bevy::pbr2::StandardMaterial;
+use bevy::prelude::*;
+use bevy::render2::render_resource::Texture;
 use bevy_egui::egui;
 use egui::Grid;
 
-impl_for_struct_delegate_fields!(
-    PointLight:
-    color,
-    intensity with NumberAttributes::positive().speed(1.0),
-    range with NumberAttributes::positive(),
-    radius with NumberAttributes::positive(),
-);
 impl_for_struct_delegate_fields!(
     bevy::pbr2::PointLight:
     color,
@@ -27,76 +14,6 @@ impl_for_struct_delegate_fields!(
     range with NumberAttributes::positive(),
     radius with NumberAttributes::positive(),
 );
-impl_for_struct_delegate_fields!(ColorMaterial: color, texture);
-impl_for_simple_enum!(
-    PrimitiveTopology: PointList,
-    LineList,
-    LineStrip,
-    TriangleList,
-    TriangleStrip
-);
-
-impl_for_simple_enum!(WindowOrigin: Center, BottomLeft);
-impl_for_simple_enum!(
-    ScalingMode: None,
-    WindowSize,
-    FixedVertical,
-    FixedHorizontal
-);
-impl_for_simple_enum!(DepthCalculation: Distance, ZDifference);
-
-//////// SHAPES ////////
-
-impl_for_struct_delegate_fields!(shape::Cube: size);
-impl_for_struct_delegate_fields!(shape::Quad: size, flip);
-impl_for_struct_delegate_fields!(shape::Plane: size);
-impl_for_struct_delegate_fields!(
-    shape::Capsule: radius,
-    rings,
-    depth,
-    latitudes,
-    longitudes,
-    uv_profile
-);
-impl_for_simple_enum!(shape::CapsuleUvProfile: Aspect, Uniform, Fixed);
-impl_for_struct_delegate_fields!(shape::Icosphere: radius, subdivisions);
-impl_for_struct_delegate_fields!(
-    shape::Torus: radius,
-    ring_radius,
-    subdivisions_segments,
-    subdivisions_sides
-);
-
-impl Inspectable for shape::Box {
-    type Attributes = ();
-
-    fn ui(&mut self, ui: &mut egui::Ui, _: Self::Attributes, context: &Context) -> bool {
-        let mut changed = false;
-
-        let mut min = Vec3::new(self.min_x, self.min_y, self.min_z);
-        let mut max = Vec3::new(self.max_x, self.max_y, self.max_z);
-
-        ui.vertical_centered(|ui| {
-            egui::Grid::new(context.id()).show(ui, |ui| {
-                ui.label("Min");
-                changed |= min.ui(ui, Default::default(), &context.with_id(0));
-                ui.end_row();
-                ui.label("Max");
-                changed |= max.ui(ui, Default::default(), &context.with_id(0));
-                ui.end_row();
-            });
-        });
-
-        self.min_x = min.x;
-        self.min_y = min.y;
-        self.min_z = min.z;
-        self.max_x = max.x;
-        self.max_y = max.y;
-        self.max_z = max.z;
-
-        changed
-    }
-}
 
 //////// COMPONENTS ////////
 
@@ -192,34 +109,6 @@ pub struct ColorAttributes {
     pub alpha: bool,
 }
 
-impl Inspectable for Color {
-    type Attributes = ColorAttributes;
-
-    fn ui(&mut self, ui: &mut egui::Ui, options: Self::Attributes, _: &Context) -> bool {
-        let old: [f32; 4] = (*self).into();
-
-        if options.alpha {
-            let mut color = egui::color::Color32::from_rgba_premultiplied(
-                (old[0] * u8::MAX as f32) as u8,
-                (old[1] * u8::MAX as f32) as u8,
-                (old[2] * u8::MAX as f32) as u8,
-                (old[3] * u8::MAX as f32) as u8,
-            );
-            let changed = ui.color_edit_button_srgba(&mut color).changed();
-            let [r, g, b, a] = color.to_array();
-            *self = Color::rgba_u8(r, g, b, a);
-
-            changed
-        } else {
-            let mut color = [old[0], old[1], old[2]];
-            let changed = ui.color_edit_button_rgb(&mut color).changed();
-            let [r, g, b] = color;
-            *self = Color::rgba(r, g, b, old[3]);
-
-            changed
-        }
-    }
-}
 impl Inspectable for bevy::render2::color::Color {
     type Attributes = ColorAttributes;
 
@@ -249,160 +138,7 @@ impl Inspectable for bevy::render2::color::Color {
     }
 }
 
-//////// RESOURCES ////////
-
-impl Inspectable for AmbientLight {
-    type Attributes = <Color as Inspectable>::Attributes;
-
-    fn ui(&mut self, ui: &mut egui::Ui, options: Self::Attributes, context: &Context) -> bool {
-        let brightness_attributes = NumberAttributes::positive().speed(0.01);
-
-        self.color.ui(ui, options, context);
-        self.brightness.ui(ui, brightness_attributes, context)
-    }
-}
-impl Inspectable for ClearColor {
-    type Attributes = <Color as Inspectable>::Attributes;
-
-    fn ui(&mut self, ui: &mut egui::Ui, options: Self::Attributes, context: &Context) -> bool {
-        self.0.ui(ui, options, context)
-    }
-}
-
 ////// OTHER //////
-
-impl_for_struct_delegate_fields!(bevy::sprite::Rect:
-    min with Vec2dAttributes::integer(),
-    max with Vec2dAttributes::integer(),
-);
-impl_for_struct_delegate_fields!(TextureAtlasSprite: color, index, flip_x, flip_y);
-
-impl Inspectable for TextureAtlas {
-    type Attributes = ();
-
-    fn ui(&mut self, ui: &mut egui::Ui, _: Self::Attributes, context: &Context) -> bool {
-        let mut changed = false;
-        egui::Grid::new(context.id()).show(ui, |ui| {
-            ui.label("texture");
-            changed |= self.texture.ui(ui, Default::default(), &context.with_id(0));
-            ui.end_row();
-
-            ui.label("size");
-            changed |= self.size.ui(ui, Vec2dAttributes::integer(), context);
-            ui.end_row();
-
-            ui.label("textures");
-            ui.collapsing("Sections", |ui| {
-                changed |= self
-                    .textures
-                    .ui(ui, Default::default(), &context.with_id(2));
-            });
-        });
-        changed
-    }
-}
-
-impl Inspectable for DirectionalLight {
-    type Attributes = ();
-
-    fn ui(&mut self, ui: &mut egui::Ui, _: Self::Attributes, context: &Context) -> bool {
-        let mut changed = false;
-
-        ui.vertical_centered(|ui| {
-            crate::egui::Grid::new(context.id()).show(ui, |ui| {
-                ui.label("direction");
-                let mut direction = self.get_direction();
-                let direction_attrs = Default::default();
-                changed |= direction.ui(ui, direction_attrs, &context.with_id(0));
-                self.set_direction(direction);
-
-                ui.end_row();
-
-                ui.label("color");
-                let color_attrs = ColorAttributes::default();
-                changed |= self.color.ui(ui, color_attrs, &context.with_id(1));
-                ui.end_row();
-
-                ui.label("illuminance");
-                let illuminance_attrs = NumberAttributes::positive();
-                changed |= self
-                    .illuminance
-                    .ui(ui, illuminance_attrs, &context.with_id(2));
-                ui.end_row();
-            });
-        });
-
-        changed
-    }
-}
-
-#[rustfmt::skip]
-impl Inspectable for StandardMaterial {
-    type Attributes = ();
-
-    fn ui(&mut self, ui: &mut egui::Ui, _: Self::Attributes, context: &Context) -> bool {
-        let mut changed = false;
-        ui.vertical_centered(|ui| {
-            egui::Grid::new(context.id()).show(ui, |ui| {
-                ui.columns(2, |all| {
-                    egui::Grid::new("left").show(&mut all[0], |ui| {
-                        ui.label("base_color");
-                        changed |= self.base_color.ui(ui, Default::default(), context);
-                        ui.end_row();
-
-                        ui.label("roughness");
-                        changed |= self.roughness.ui(ui, NumberAttributes::between(0.089, 1.0).speed(0.01), context);
-                        ui.end_row();
-
-                        ui.label("reflectance");
-                        changed |= self.reflectance.ui(ui, NumberAttributes::positive(), context);
-                        ui.end_row();
-                    });
-                    egui::Grid::new("right").show(&mut all[1], |ui| {
-                        ui.label("emissive");
-                        changed |= self.emissive.ui(ui, Default::default(), context);
-                        ui.end_row();
-
-                        ui.label("metallic");
-                        changed |= self.metallic.ui(ui, NumberAttributes::normalized().speed(0.01), context);
-                        ui.end_row();
-
-                        ui.label("unlit");
-                        changed |= self.unlit.ui(ui, Default::default(), context);
-                        ui.end_row();
-                    });
-                });
-            });
-
-            ui.collapsing("Textures", |ui| {
-                egui::Grid::new("Textures").show(ui, |ui| {
-                    let texture_option_attributes = OptionAttributes { replacement: Some(|| Handle::weak(HandleId::random::<Texture>())), ..Default::default() };
-
-                    ui.label("base_color");
-                    changed |= self.base_color_texture.ui(ui, texture_option_attributes.clone(), &context.with_id(0));
-                    ui.end_row();
-
-                    ui.label("normal_map");
-                    changed |= self.normal_map.ui(ui, texture_option_attributes.clone(), &context.with_id(0));
-                    ui.end_row();
-
-                    ui.label("metallic_roughness");
-                    changed |= self.metallic_roughness_texture.ui(ui, texture_option_attributes.clone(), &context.with_id(1));
-                    ui.end_row();
-
-                    ui.label("emmissive");
-                    changed |= self.emissive_texture.ui(ui, texture_option_attributes.clone(), &context.with_id(2));
-                    ui.end_row();
-
-                    ui.label("occlusion texture");
-                    changed |= self.occlusion_texture.ui(ui, texture_option_attributes, &context.with_id(3));
-                    ui.end_row();
-                });
-            });
-        });
-        changed
-    }
-}
 
 #[rustfmt::skip]
 impl Inspectable for bevy::pbr2::StandardMaterial {
@@ -444,7 +180,7 @@ impl Inspectable for bevy::pbr2::StandardMaterial {
 
             ui.collapsing("Textures", |ui| {
                 egui::Grid::new("Textures").show(ui, |ui| {
-                    let texture_option_attributes = OptionAttributes { replacement: Some(|| Handle::weak(HandleId::random::<Texture>())), ..Default::default() };
+                    let texture_option_attributes = OptionAttributes { replacement: Some(|| Handle::weak(HandleId::random::<StandardMaterial>())), ..Default::default() };
 
                     ui.label("base_color");
                     changed |= self.base_color_texture.ui(ui, texture_option_attributes.clone(), &context.with_id(0));
@@ -472,72 +208,11 @@ impl Inspectable for bevy::pbr2::StandardMaterial {
     }
 }
 
-impl Inspectable for Mesh {
-    type Attributes = ();
-
-    fn ui(&mut self, ui: &mut egui::Ui, _: Self::Attributes, context: &Context) -> bool {
-        Grid::new(context.id()).show(ui, |ui| {
-            ui.label("Primitive Topology");
-            let _ = ui.button(format!("{:?}", self.primitive_topology()));
-
-            let attributes = &[
-                Mesh::ATTRIBUTE_POSITION,
-                Mesh::ATTRIBUTE_COLOR,
-                Mesh::ATTRIBUTE_UV_0,
-                Mesh::ATTRIBUTE_NORMAL,
-                Mesh::ATTRIBUTE_TANGENT,
-            ];
-            ui.end_row();
-
-            ui.label("Vertices");
-            ui.label(self.count_vertices().to_string());
-            ui.end_row();
-
-            if let Some(indices) = self.indices() {
-                ui.label("Indices");
-                let len = match indices {
-                    Indices::U16(vec) => vec.len(),
-                    Indices::U32(vec) => vec.len(),
-                };
-                ui.label(len.to_string());
-                ui.end_row();
-            }
-
-            ui.label("Vertex Attributes");
-            ui.collapsing("Attributes", |ui| {
-                ui.vertical(|ui| {
-                    for &attribute in attributes {
-                        if self.attribute(attribute).is_some() {
-                            ui.label(attribute);
-                        }
-                    }
-                });
-            });
-        });
-
-        false
-    }
-}
-
 impl Inspectable for Name {
     type Attributes = ();
 
     fn ui(&mut self, ui: &mut egui::Ui, _: Self::Attributes, _: &Context) -> bool {
         ui.label(self.as_str());
-        false
-    }
-}
-
-impl Inspectable for VisibleEntities {
-    type Attributes = ();
-
-    fn ui(&mut self, ui: &mut egui::Ui, _: Self::Attributes, _: &Context) -> bool {
-        let len = self.value.len();
-        let entity = match len {
-            1 => "entity",
-            _ => "entities",
-        };
-        ui.label(format!("{} visible {}", self.value.len(), entity));
         false
     }
 }

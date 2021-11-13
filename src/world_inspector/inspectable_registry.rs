@@ -1,7 +1,5 @@
 use crate::{Context, Inspectable};
-use bevy::render::camera::{DepthCalculation, ScalingMode, VisibleEntities, WindowOrigin};
-use bevy::{pbr::AmbientLight, prelude::*};
-use bevy::{render::pipeline::PrimitiveTopology, utils::HashMap};
+use bevy::{prelude::*, utils::HashMap};
 use bevy_egui::egui;
 use std::any::TypeId;
 
@@ -102,35 +100,7 @@ impl Default for InspectableRegistry {
         this.register::<Quat>();
         register!(this Vec4, bevy::math::IVec4, bevy::math::DVec4, bevy::math::UVec4);
 
-        this.register::<Color>();
         this.register::<bevy::asset::HandleId>();
-        this.register::<TextureAtlasSprite>();
-        this.register::<TextureAtlas>();
-        this.register::<PointLight>();
-        this.register::<DirectionalLight>();
-        this.register::<StandardMaterial>();
-        this.register::<ColorMaterial>();
-        this.register::<PrimitiveTopology>();
-        this.register::<Mesh>();
-        this.register::<bevy::sprite::Rect>();
-
-        this.register::<WindowOrigin>();
-        this.register::<ScalingMode>();
-        this.register::<DepthCalculation>();
-        this.register::<VisibleEntities>();
-
-        this.register::<Handle<Texture>>();
-        this.register::<Handle<StandardMaterial>>();
-        this.register::<Handle<ColorMaterial>>();
-        this.register::<Handle<TextureAtlas>>();
-        this.register::<Handle<Mesh>>();
-
-        this.register::<ClearColor>();
-        this.register::<AmbientLight>();
-
-        register!(this Display, Style, Size<f32>, Size<Val>, Val, bevy::ui::FocusPolicy);
-        register!(this VerticalAlign, HorizontalAlign, TextAlignment, TextStyle, TextSection, Text);
-        register!(this PositionType, Direction, FlexDirection, FlexWrap, AlignItems, AlignSelf, JustifyContent);
 
         #[cfg(feature = "rapier")]
         {
